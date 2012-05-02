@@ -1,6 +1,3 @@
-html4.ELEMENTS.embed = html4.eflags.UNSAFE;
-html4.ELEMENTS.param = html4.eflags.UNSAFE; // NOT empty or we break stuff in some browsers...
-
 exports.aceInitInnerdocbodyHead = function(hook_name, args, cb) {
   args.iframeHTML.push('<link rel="stylesheet" type="text/css" href="/static/plugins/ep_embedmedia/static/css/ace.css"/>');
   return cb();
@@ -59,6 +56,11 @@ var parseUrlParams = function (url) {
 }
 
 exports.sanitize = function (inputHtml) {
+  // Monkeypatch the sanitizer a bit, adding support for embed tags and fixing broken param tags
+
+  html4.ELEMENTS.embed = html4.eflags.UNSAFE;
+  html4.ELEMENTS.param = html4.eflags.UNSAFE; // NOT empty or we break stuff in some browsers...
+
   return html.sanitizeWithPolicy(inputHtml, function(tagName, attribs) {
     if ($.inArray(tagName, ["embed", "object", "iframe", "param"]) == -1) {
       return null;

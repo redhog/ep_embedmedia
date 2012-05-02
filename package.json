@@ -1,7 +1,7 @@
 {
   "name": "ep_embedmedia",
   "description": "Embed media (youtube, vimeo etc)",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "RedHog (Egil Moeller) <egil.moller@freecode.no>",
   "contributors": [],
   "dependencies": { },
