@@ -6,5 +6,8 @@
   z-index:999999;
 }
 
-.buttonicon-embed-media { background: url(/static/plugins/ep_embedmedia/static/html/editbar_icon.png); }
+.buttonicon-embed-media { background: url(/static/plugins/ep_embedmedia/static/html/editbar_icon.png) !important; }
 
+.embedMediaButton {
+  padding:10px;
+}
