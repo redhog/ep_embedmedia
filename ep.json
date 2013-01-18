@@ -6,7 +6,7 @@
 	"eejsBlock_editbarMenuLeft": "ep_embedmedia/hooks:eejsBlock_editbarMenuLeft",
 	"eejsBlock_scripts": "ep_embedmedia/hooks:eejsBlock_scripts",
 	"eejsBlock_styles": "ep_embedmedia/hooks:eejsBlock_styles",
-	"eejsBlock_modals": "ep_embedmedia/hooks:eejsBlock_modals"
+	"eejsBlock_body": "ep_embedmedia/hooks:eejsBlock_body"
       },
       "client_hooks": {
         "aceInitInnerdocbodyHead": "ep_embedmedia/static/js/hooks:aceInitInnerdocbodyHead",
