@@ -97,7 +97,7 @@ exports.cleanEmbedCode = function (orig) {
   }
 
   if (!res) {
-    return  "<img src='/static/plugins/ep_embedmedia/static/html/invalid.png'></img>";
+    return  "<img src='/static/plugins/ep_embedmedia/static/html/invalid.png'>";
   }
 
   return res;
