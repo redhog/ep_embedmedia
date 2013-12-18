@@ -6,6 +6,10 @@
   z-index:999999;
 }
 
+#embedMediaModal > textarea {
+  max-width:99%;
+}
+
 .buttonicon-embed-media { background: url(/static/plugins/ep_embedmedia/static/html/editbar_icon.png) !important; }
 
 .embedMediaButton {
