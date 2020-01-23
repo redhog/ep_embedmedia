@@ -1,5 +1,5 @@
 exports.aceInitInnerdocbodyHead = function(hook_name, args, cb) {
-  args.iframeHTML.push('<link rel="stylesheet" type="text/css" href="/static/plugins/ep_embedmedia/static/css/ace.css"/>');
+  args.iframeHTML.push('<link rel="stylesheet" type="text/css" href="../static/plugins/ep_embedmedia/static/css/ace.css"/>');
   return cb();
 };
 
@@ -97,7 +97,7 @@ exports.cleanEmbedCode = function (orig) {
   }
 
   if (!res) {
-    return  "<img src='/static/plugins/ep_embedmedia/static/html/invalid.png'>";
+    return  "<img src='../static/plugins/ep_embedmedia/static/html/invalid.png'>";
   }
 
   return res;
