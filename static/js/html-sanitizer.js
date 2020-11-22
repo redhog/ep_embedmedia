@@ -21,7 +21,7 @@
  * <p>
  * The HTML sanitizer is built around a SAX parser and HTML element and
  * attributes schemas.
- * 
+ *
  * If the cssparser is loaded, inline styles are sanitized using the
  * css property and value schemas.  Else they are remove during
  * sanitization.
@@ -38,20 +38,19 @@
 /**
  * \@namespace
  */
-var html = (function(html4) {
-
+var html = (function (html4) {
   // For closure compiler
-  var parseCssDeclarations, sanitizeCssProperty, cssSchema;
+  let parseCssDeclarations, sanitizeCssProperty, cssSchema;
   if ('undefined' !== typeof window) {
-    parseCssDeclarations = window['parseCssDeclarations'];
-    sanitizeCssProperty = window['sanitizeCssProperty'];
-    cssSchema = window['cssSchema'];
+    parseCssDeclarations = window.parseCssDeclarations;
+    sanitizeCssProperty = window.sanitizeCssProperty;
+    cssSchema = window.cssSchema;
   }
 
-  var lcase;
+  let lcase;
   // The below may not be true on browsers in the Turkish locale.
   if ('script' === 'SCRIPT'.toLowerCase()) {
-    lcase = function(s) { return s.toLowerCase(); };
+    lcase = function (s) { return s.toLowerCase(); };
   } else {
     /**
      * {\@updoc
@@ -61,27 +60,25 @@ var html = (function(html4) {
      * # 'script'
      * }
      */
-    lcase = function(s) {
+    lcase = function (s) {
       return s.replace(
           /[A-Z]/g,
-          function(ch) {
-            return String.fromCharCode(ch.charCodeAt(0) | 32);
-          });
+          (ch) => String.fromCharCode(ch.charCodeAt(0) | 32));
     };
   }
 
   // The keys of this object must be 'quoted' or JSCompiler will mangle them!
-  var ENTITIES = {
-    'lt': '<',
-    'gt': '>',
-    'amp': '&',
-    'nbsp': '\240',
-    'quot': '"',
-    'apos': '\''
+  const ENTITIES = {
+    lt: '<',
+    gt: '>',
+    amp: '&',
+    nbsp: '\240',
+    quot: '"',
+    apos: '\'',
   };
 
-  var decimalEscapeRe = /^#(\d+)$/;
-  var hexEscapeRe = /^#x([0-9A-Fa-f]+)$/;
+  const decimalEscapeRe = /^#(\d+)$/;
+  const hexEscapeRe = /^#x([0-9A-Fa-f]+)$/;
   /**
    * Decodes an HTML entity.
    *
@@ -118,12 +115,12 @@ var html = (function(html4) {
    * @return {string} a single unicode code-point as a string.
    */
   function lookupEntity(name) {
-    name = lcase(name);  // TODO: &pi; is different from &Pi;
+    name = lcase(name); // TODO: &pi; is different from &Pi;
     if (ENTITIES.hasOwnProperty(name)) { return ENTITIES[name]; }
-    var m = name.match(decimalEscapeRe);
+    let m = name.match(decimalEscapeRe);
     if (m) {
       return String.fromCharCode(parseInt(m[1], 10));
-    } else if (!!(m = name.match(hexEscapeRe))) {
+    } else if (m = name.match(hexEscapeRe)) {
       return String.fromCharCode(parseInt(m[1], 16));
     }
     return '';
@@ -133,12 +130,12 @@ var html = (function(html4) {
     return lookupEntity(name);
   }
 
-  var nulRe = /\0/g;
+  const nulRe = /\0/g;
   function stripNULs(s) {
     return s.replace(nulRe, '');
   }
 
-  var entityRe = /&(#\d+|#x[0-9A-Fa-f]+|\w+);/g;
+  const entityRe = /&(#\d+|#x[0-9A-Fa-f]+|\w+);/g;
   /**
    * The plain text of a chunk of HTML CDATA which possibly containing.
    *
@@ -164,11 +161,11 @@ var html = (function(html4) {
     return s.replace(entityRe, decodeOneEntity);
   }
 
-  var ampRe = /&/g;
-  var looseAmpRe = /&([^a-z#]|#(?:[^0-9x]|x(?:[^0-9a-f]|$)|$)|$)/gi;
-  var ltRe = /[<]/g;
-  var gtRe = />/g;
-  var quotRe = /\"/g;
+  const ampRe = /&/g;
+  const looseAmpRe = /&([^a-z#]|#(?:[^0-9x]|x(?:[^0-9a-f]|$)|$)|$)/gi;
+  const ltRe = /[<]/g;
+  const gtRe = />/g;
+  const quotRe = /\"/g;
 
   /**
    * Escapes HTML special characters in attribute values.
@@ -183,7 +180,7 @@ var html = (function(html4) {
    * }
    */
   function escapeAttrib(s) {
-    return ('' + s).replace(ampRe, '&amp;').replace(ltRe, '&lt;')
+    return (`${s}`).replace(ampRe, '&amp;').replace(ltRe, '&lt;')
         .replace(gtRe, '&gt;').replace(quotRe, '&#34;');
   }
 
@@ -215,16 +212,16 @@ var html = (function(html4) {
   // character.  However, it might have an unbalanced quote character, and
   // when we see that, we combine additional tokens to balance the quote.
 
-  var ATTR_RE = new RegExp(
-    '^\\s*' +
-    '([a-z][a-z-]*)' +          // 1 = Attribute name
+  const ATTR_RE = new RegExp(
+      '^\\s*' +
+    '([a-z][a-z-]*)' + // 1 = Attribute name
     '(?:' + (
-      '\\s*(=)\\s*' +           // 2 = Is there a value?
-      '(' + (                   // 3 = Attribute value
+        '\\s*(=)\\s*' + // 2 = Is there a value?
+      '(' + ( // 3 = Attribute value
         // TODO(felix8a): maybe use backref to match quotes
-        '(\")[^\"]*(\"|$)' +    // 4, 5 = Double-quoted string
+          '(\")[^\"]*(\"|$)' + // 4, 5 = Double-quoted string
         '|' +
-        '(\')[^\']*(\'|$)' +    // 6, 7 = Single-quoted string
+        '(\')[^\']*(\'|$)' + // 6, 7 = Single-quoted string
         '|' +
         // Positive lookahead to prevent interpretation of
         // <foo a= b=c> as <foo a='b=c'>
@@ -233,18 +230,18 @@ var html = (function(html4) {
         '|' +
         // Unquoted value that isn't an attribute name
         // (since we didn't match the positive lookahead above)
-        '[^\"\'\\s]*' ) +
-      ')' ) +
+        '[^\"\'\\s]*') +
+      ')') +
     ')?',
-    'i');
+      'i');
 
-  var ENTITY_RE = /^(#[0-9]+|#x[0-9a-f]+|\w+);/i;
+  const ENTITY_RE = /^(#[0-9]+|#x[0-9a-f]+|\w+);/i;
 
   // false on IE<=8, true on most other browsers
-  var splitWillCapture = ('a,b'.split(/(,)/).length === 3);
+  const splitWillCapture = ('a,b'.split(/(,)/).length === 3);
 
   // bitmask for tags with special parsing, like <script> and <textarea>
-  var EFLAGS_TEXT = html4.eflags.CDATA | html4.eflags.RCDATA;
+  const EFLAGS_TEXT = html4.eflags.CDATA | html4.eflags.RCDATA;
 
   /**
    * Given a SAX-like event handler, produce a function that feeds those
@@ -270,7 +267,7 @@ var html = (function(html4) {
    *     and a parameter.  The parameter is passed on to the handler methods.
    */
   function makeSaxParser(handler) {
-    return function(htmlText, param) {
+    return function (htmlText, param) {
       return parse(htmlText, handler, param);
     };
   }
@@ -305,92 +302,103 @@ var html = (function(html4) {
   // TODO(felix8a): "<p<p<p..." is slower on IE[6-8]
 
   function parse(htmlText, handler, param) {
-    var h = handler;
+    const h = handler;
     if (h.startDoc) { h.startDoc(param); }
-    var m, p, tagName;
-    var parts = htmlSplit(htmlText);
-    var noMoreGT = false;
-    var noMoreEndComments = false;
-    for (var pos = 0, end = parts.length; pos < end;) {
-      var current = parts[pos++];
-      var next = parts[pos];
+    let m, p, tagName;
+    const parts = htmlSplit(htmlText);
+    let noMoreGT = false;
+    let noMoreEndComments = false;
+    for (let pos = 0, end = parts.length; pos < end;) {
+      const current = parts[pos++];
+      const next = parts[pos];
       switch (current) {
-      case '&':
-        if (ENTITY_RE.test(next)) {
-          if (h.pcdata) { h.pcdata('&' + next, param); }
-          pos++;
-        } else {
-          if (h.pcdata) { h.pcdata("&amp;", param); }
-        }
-        break;
-      case '<\/':
-        if (m = /^(\w+)[^\'\"]*/.exec(next)) {
-          if (m[0].length === next.length && parts[pos + 1] === '>') {
+        case '&':
+          if (ENTITY_RE.test(next)) {
+            if (h.pcdata) { h.pcdata(`&${next}`, param); }
+            pos++;
+          } else if (h.pcdata) { h.pcdata('&amp;', param); }
+          break;
+        case '<\/':
+          if (m = /^(\w+)[^\'\"]*/.exec(next)) {
+            if (m[0].length === next.length && parts[pos + 1] === '>') {
             // fast case, no attribute parsing needed
-            pos += 2;
-            tagName = lcase(m[1]);
-            if (html4.ELEMENTS.hasOwnProperty(tagName)) {
-              if (h.endTag) { h.endTag(tagName, param); }
-            }
-          } else {
+              pos += 2;
+              tagName = lcase(m[1]);
+              if (html4.ELEMENTS.hasOwnProperty(tagName)) {
+                if (h.endTag) { h.endTag(tagName, param); }
+              }
+            } else {
             // slow case, need to parse attributes
             // TODO(felix8a): do we really care about misparsing this?
-            pos = parseEndTag(parts, pos, h, param);
-          }
-        } else {
-          if (h.pcdata) { h.pcdata('&lt;/', param); }
-        }
-        break;
-      case '<':
-        if (m = /^(\w+)\s*\/?/.exec(next)) {
-          if (m[0].length === next.length && parts[pos + 1] === '>') {
-            // fast case, no attribute parsing needed
-            pos += 2;
-            tagName = lcase(m[1]);
-            if (html4.ELEMENTS.hasOwnProperty(tagName)) {
-              if (h.startTag) { h.startTag(tagName, [], param); }
-              // tags like <script> and <textarea> have special parsing
-              var eflags = html4.ELEMENTS[tagName];
-              if (eflags & EFLAGS_TEXT) {
-                var tag = { name: tagName, next: pos, eflags: eflags };
-                pos = parseText(parts, tag, h, param);
-              }
+              pos = parseEndTag(parts, pos, h, param);
             }
-          } else {
+          } else if (h.pcdata) { h.pcdata('&lt;/', param); }
+          break;
+        case '<':
+          if (m = /^(\w+)\s*\/?/.exec(next)) {
+            if (m[0].length === next.length && parts[pos + 1] === '>') {
+            // fast case, no attribute parsing needed
+              pos += 2;
+              tagName = lcase(m[1]);
+              if (html4.ELEMENTS.hasOwnProperty(tagName)) {
+                if (h.startTag) { h.startTag(tagName, [], param); }
+                // tags like <script> and <textarea> have special parsing
+                const eflags = html4.ELEMENTS[tagName];
+                if (eflags & EFLAGS_TEXT) {
+                  const tag = {name: tagName, next: pos, eflags};
+                  pos = parseText(parts, tag, h, param);
+                }
+              }
+            } else {
             // slow case, need to parse attributes
-            pos = parseStartTag(parts, pos, h, param);
-          }
-        } else {
-          if (h.pcdata) { h.pcdata('&lt;', param); }
-        }
-        break;
-      case '<\!--':
+              pos = parseStartTag(parts, pos, h, param);
+            }
+          } else if (h.pcdata) { h.pcdata('&lt;', param); }
+          break;
+        case '<\!--':
         // The pathological case is n copies of '<\!--' without '-->', and
         // repeated failure to find '-->' is quadratic.  We avoid that by
         // remembering when search for '-->' fails.
-        if (!noMoreEndComments) {
+          if (!noMoreEndComments) {
           // A comment <\!--x--> is split into three tokens:
           //   '<\!--', 'x--', '>'
           // We want to find the next '>' token that has a preceding '--'.
           // pos is at the 'x--'.
-          for (p = pos + 1; p < end; p++) {
-            if (parts[p] === '>' && /--$/.test(parts[p - 1])) { break; }
+            for (p = pos + 1; p < end; p++) {
+              if (parts[p] === '>' && /--$/.test(parts[p - 1])) { break; }
+            }
+            if (p < end) {
+              pos = p + 1;
+            } else {
+              noMoreEndComments = true;
+            }
           }
-          if (p < end) {
-            pos = p + 1;
+          if (noMoreEndComments) {
+            if (h.pcdata) { h.pcdata('&lt;!--', param); }
+          }
+          break;
+        case '<\!':
+          if (!/^\w/.test(next)) {
+            if (h.pcdata) { h.pcdata('&lt;!', param); }
           } else {
-            noMoreEndComments = true;
-          }
-        }
-        if (noMoreEndComments) {
-          if (h.pcdata) { h.pcdata('&lt;!--', param); }
-        }
-        break;
-      case '<\!':
-        if (!/^\w/.test(next)) {
-          if (h.pcdata) { h.pcdata('&lt;!', param); }
-        } else {
           // similar to noMoreEndComment logic
+            if (!noMoreGT) {
+              for (p = pos + 1; p < end; p++) {
+                if (parts[p] === '>') { break; }
+              }
+              if (p < end) {
+                pos = p + 1;
+              } else {
+                noMoreGT = true;
+              }
+            }
+            if (noMoreGT) {
+              if (h.pcdata) { h.pcdata('&lt;!', param); }
+            }
+          }
+          break;
+        case '<?':
+        // similar to noMoreEndComment logic
           if (!noMoreGT) {
             for (p = pos + 1; p < end; p++) {
               if (parts[p] === '>') { break; }
@@ -402,34 +410,17 @@ var html = (function(html4) {
             }
           }
           if (noMoreGT) {
-            if (h.pcdata) { h.pcdata('&lt;!', param); }
+            if (h.pcdata) { h.pcdata('&lt;?', param); }
           }
-        }
-        break;
-      case '<?':
-        // similar to noMoreEndComment logic
-        if (!noMoreGT) {
-          for (p = pos + 1; p < end; p++) {
-            if (parts[p] === '>') { break; }
-          }
-          if (p < end) {
-            pos = p + 1;
-          } else {
-            noMoreGT = true;
-          }
-        }
-        if (noMoreGT) {
-          if (h.pcdata) { h.pcdata('&lt;?', param); }
-        }
-        break;
-      case '>':
-        if (h.pcdata) { h.pcdata("&gt;", param); }
-        break;
-      case '':
-        break;
-      default:
-        if (h.pcdata) { h.pcdata(current, param); }
-        break;
+          break;
+        case '>':
+          if (h.pcdata) { h.pcdata('&gt;', param); }
+          break;
+        case '':
+          break;
+        default:
+          if (h.pcdata) { h.pcdata(current, param); }
+          break;
       }
     }
     if (h.endDoc) { h.endDoc(param); }
@@ -438,14 +429,14 @@ var html = (function(html4) {
   // Split str into parts for the html parser.
   function htmlSplit(str) {
     // can't hoist this out of the function because of the re.exec loop.
-    var re = /(<\/|<\!--|<[!?]|[&<>])/g;
+    const re = /(<\/|<\!--|<[!?]|[&<>])/g;
     str += '';
     if (splitWillCapture) {
       return str.split(re);
     } else {
-      var parts = [];
-      var lastPos = 0;
-      var m;
+      const parts = [];
+      let lastPos = 0;
+      let m;
       while ((m = re.exec(str)) !== null) {
         parts.push(str.substring(lastPos, m.index));
         parts.push(m[0]);
@@ -457,7 +448,7 @@ var html = (function(html4) {
   }
 
   function parseEndTag(parts, pos, h, param) {
-    var tag = parseTagAndAttrs(parts, pos);
+    const tag = parseTagAndAttrs(parts, pos);
     // drop unclosed tags
     if (!tag) { return parts.length; }
     if (tag.eflags !== void 0) {
@@ -467,7 +458,7 @@ var html = (function(html4) {
   }
 
   function parseStartTag(parts, pos, h, param) {
-    var tag = parseTagAndAttrs(parts, pos);
+    const tag = parseTagAndAttrs(parts, pos);
     // drop unclosed tags
     if (!tag) { return parts.length; }
     if (tag.eflags !== void 0) {
@@ -480,23 +471,23 @@ var html = (function(html4) {
     return tag.next;
   }
 
-  var endTagRe = {};
+  const endTagRe = {};
 
   // Tags like <script> and <textarea> are flagged as CDATA or RCDATA,
   // which means everything is text until we see the correct closing tag.
   function parseText(parts, tag, h, param) {
-    var end = parts.length;
+    const end = parts.length;
     if (!endTagRe.hasOwnProperty(tag.name)) {
-      endTagRe[tag.name] = new RegExp('^' + tag.name + '(?:[\\s\\/]|$)', 'i');
+      endTagRe[tag.name] = new RegExp(`^${tag.name}(?:[\\s\\/]|$)`, 'i');
     }
-    var re = endTagRe[tag.name];
-    var first = tag.next;
-    var p = tag.next + 1;
+    const re = endTagRe[tag.name];
+    const first = tag.next;
+    let p = tag.next + 1;
     for (; p < end; p++) {
       if (parts[p - 1] === '<\/' && re.test(parts[p])) { break; }
     }
     if (p < end) { p -= 1; }
-    var buf = parts.slice(first, p).join('');
+    const buf = parts.slice(first, p).join('');
     if (tag.eflags & html4.eflags.CDATA) {
       if (h.cdata) { h.cdata(buf, param); }
     } else if (tag.eflags & html4.eflags.RCDATA) {
@@ -509,36 +500,35 @@ var html = (function(html4) {
 
   // at this point, parts[pos-1] is either "<" or "<\/".
   function parseTagAndAttrs(parts, pos) {
-    var m = /^(\w+)/.exec(parts[pos]);
-    var tag = { name: lcase(m[1]) };
+    let m = /^(\w+)/.exec(parts[pos]);
+    const tag = {name: lcase(m[1])};
     if (html4.ELEMENTS.hasOwnProperty(tag.name)) {
       tag.eflags = html4.ELEMENTS[tag.name];
     } else {
       tag.eflags = void 0;
     }
-    var buf = parts[pos].substr(m[0].length);
+    let buf = parts[pos].substr(m[0].length);
     // Find the next '>'.  We optimistically assume this '>' is not in a
     // quoted context, and further down we fix things up if it turns out to
     // be quoted.
-    var p = pos + 1;
-    var end = parts.length;
+    let p = pos + 1;
+    const end = parts.length;
     for (; p < end; p++) {
       if (parts[p] === '>') { break; }
       buf += parts[p];
     }
     if (end <= p) { return void 0; }
-    var attrs = [];
+    const attrs = [];
     while (buf !== '') {
       m = ATTR_RE.exec(buf);
       if (!m) {
         // No attribute found: skip garbage
         buf = buf.replace(/^[\s\S][^a-z\s]*/, '');
-
       } else if ((m[4] && !m[5]) || (m[6] && !m[7])) {
         // Unterminated quote: slurp to the next unquoted '>'
-        var quote = m[4] || m[6];
-        var sawQuote = false;
-        var abuf = [buf, parts[p++]];
+        const quote = m[4] || m[6];
+        let sawQuote = false;
+        const abuf = [buf, parts[p++]];
         for (; p < end; p++) {
           if (sawQuote) {
             if (parts[p] === '>') { break; }
@@ -552,11 +542,10 @@ var html = (function(html4) {
         // Otherwise retry attribute parsing
         buf = abuf.join('');
         continue;
-
       } else {
         // We have an attribute
-        var aName = lcase(m[1]);
-        var aValue = m[2] ? decodeValue(m[3]) : aName;
+        const aName = lcase(m[1]);
+        const aValue = m[2] ? decodeValue(m[3]) : aName;
         attrs.push(aName, aValue);
         buf = buf.substr(m[0].length);
       }
@@ -567,7 +556,7 @@ var html = (function(html4) {
   }
 
   function decodeValue(v) {
-    var q = v.charCodeAt(0);
+    const q = v.charCodeAt(0);
     if (q === 0x22 || q === 0x27) { // " or '
       v = v.substr(1, v.length - 2);
     }
@@ -586,20 +575,20 @@ var html = (function(html4) {
    *     HTML and appends result strings to the second argument, an array.
    */
   function makeHtmlSanitizer(tagPolicy) {
-    var stack;
-    var ignoring;
-    var emit = function (text, out) {
+    let stack;
+    let ignoring;
+    const emit = function (text, out) {
       if (!ignoring) { out.push(text); }
     };
     return makeSaxParser({
-      startDoc: function(_) {
+      startDoc(_) {
         stack = [];
         ignoring = false;
       },
-      startTag: function(tagName, attribs, out) {
+      startTag(tagName, attribs, out) {
         if (ignoring) { return; }
         if (!html4.ELEMENTS.hasOwnProperty(tagName)) { return; }
-        var eflags = html4.ELEMENTS[tagName];
+        const eflags = html4.ELEMENTS[tagName];
         if (eflags & html4.eflags.FOLDABLE) {
           return;
         }
@@ -615,24 +604,24 @@ var html = (function(html4) {
         }
 
         out.push('<', tagName);
-        for (var i = 0, n = attribs.length; i < n; i += 2) {
-          var attribName = attribs[i],
-              value = attribs[i + 1];
+        for (let i = 0, n = attribs.length; i < n; i += 2) {
+          const attribName = attribs[i];
+          const value = attribs[i + 1];
           if (value !== null && value !== void 0) {
             out.push(' ', attribName, '="', escapeAttrib(value), '"');
           }
         }
         out.push('>');
       },
-      endTag: function(tagName, out) {
+      endTag(tagName, out) {
         if (ignoring) {
           ignoring = false;
           return;
         }
         if (!html4.ELEMENTS.hasOwnProperty(tagName)) { return; }
-        var eflags = html4.ELEMENTS[tagName];
+        const eflags = html4.ELEMENTS[tagName];
         if (!(eflags & (html4.eflags.EMPTY | html4.eflags.FOLDABLE))) {
-          var index;
+          let index;
           if (eflags & html4.eflags.OPTIONAL_ENDTAG) {
             for (index = stack.length; --index >= 0;) {
               var stackEl = stack[index];
@@ -648,8 +637,8 @@ var html = (function(html4) {
               if (stack[index] === tagName) { break; }
             }
           }
-          if (index < 0) { return; }  // Not opened.
-          for (var i = stack.length; --i > index;) {
+          if (index < 0) { return; } // Not opened.
+          for (let i = stack.length; --i > index;) {
             var stackEl = stack[i];
             if (!(html4.ELEMENTS[stackEl] &
                   html4.eflags.OPTIONAL_ENDTAG)) {
@@ -663,27 +652,27 @@ var html = (function(html4) {
       pcdata: emit,
       rcdata: emit,
       cdata: emit,
-      endDoc: function(out) {
+      endDoc(out) {
         for (; stack.length; stack.length--) {
           out.push('<\/', stack[stack.length - 1], '>');
         }
-      }
+      },
     });
   }
 
   // From RFC3986
-  var URI_SCHEME_RE = new RegExp(
+  const URI_SCHEME_RE = new RegExp(
       '^' +
       '(?:' +
-        '([^:\/?# ]+)' +         // scheme
-      ':)?'
+        '([^:\/?# ]+)' + // scheme
+      ':)?',
   );
 
-  var ALLOWED_URI_SCHEMES = /^(?:https?|mailto)$/i;
+  const ALLOWED_URI_SCHEMES = /^(?:https?|mailto)$/i;
 
   function safeUri(uri, naiveUriRewriter) {
     if (!naiveUriRewriter) { return null; }
-    var parsed = ('' + uri).match(URI_SCHEME_RE);
+    const parsed = (`${uri}`).match(URI_SCHEME_RE);
     if (parsed && (!parsed[1] || ALLOWED_URI_SCHEMES.test(parsed[1]))) {
       return naiveUriRewriter(uri);
     } else {
@@ -707,14 +696,15 @@ var html = (function(html4) {
    */
   function sanitizeAttribs(
       tagName, attribs, opt_naiveUriRewriter, opt_nmTokenPolicy) {
-    for (var i = 0; i < attribs.length; i += 2) {
-      var attribName = attribs[i];
-      var value = attribs[i + 1];
-      var atype = null, attribKey;
-      if ((attribKey = tagName + '::' + attribName,
-           html4.ATTRIBS.hasOwnProperty(attribKey)) ||
-          (attribKey = '*::' + attribName,
-           html4.ATTRIBS.hasOwnProperty(attribKey))) {
+    for (let i = 0; i < attribs.length; i += 2) {
+      const attribName = attribs[i];
+      let value = attribs[i + 1];
+      let atype = null; var
+        attribKey;
+      if ((attribKey = `${tagName}::${attribName}`,
+      html4.ATTRIBS.hasOwnProperty(attribKey)) ||
+          (attribKey = `*::${attribName}`,
+          html4.ATTRIBS.hasOwnProperty(attribKey))) {
         atype = html4.ATTRIBS[attribKey];
       }
       if (atype !== null) {
@@ -732,17 +722,17 @@ var html = (function(html4) {
             parseCssDeclarations(
                 value,
                 {
-                  declaration: function (property, tokens) {
-                    var normProp = property.toLowerCase();
-                    var schema = cssSchema[normProp];
+                  declaration(property, tokens) {
+                    const normProp = property.toLowerCase();
+                    const schema = cssSchema[normProp];
                     if (!schema) {
                       return;
                     }
                     sanitizeCssProperty(
                         schema, tokens,
                         opt_naiveUriRewriter);
-                    sanitizedDeclarations.push(property + ': ' + tokens.join(' '));
-                  }
+                    sanitizedDeclarations.push(`${property}: ${tokens.join(' ')}`);
+                  },
                 });
             value = sanitizedDeclarations.length > 0 ? sanitizedDeclarations.join(' ; ') : null;
             break;
@@ -759,10 +749,10 @@ var html = (function(html4) {
             break;
           case html4.atype.URI_FRAGMENT:
             if (value && '#' === value.charAt(0)) {
-              value = value.substring(1);  // remove the leading '#'
+              value = value.substring(1); // remove the leading '#'
               value = opt_nmTokenPolicy ? opt_nmTokenPolicy(value) : value;
               if (value !== null && value !== void 0) {
-                value = '#' + value;  // restore the leading '#'
+                value = `#${value}`; // restore the leading '#'
               }
             } else {
               value = null;
@@ -793,7 +783,7 @@ var html = (function(html4) {
    *     passing to html.sanitize.
    */
   function makeTagPolicy(opt_naiveUriRewriter, opt_nmTokenPolicy) {
-    return function(tagName, attribs) {
+    return function (tagName, attribs) {
       if (!(html4.ELEMENTS[tagName] & html4.eflags.UNSAFE)) {
         return sanitizeAttribs(
             tagName, attribs, opt_naiveUriRewriter, opt_nmTokenPolicy);
@@ -810,7 +800,7 @@ var html = (function(html4) {
    * @return {string} The sanitized HTML.
    */
   function sanitizeWithPolicy(inputHtml, tagPolicy) {
-    var outputArray = [];
+    const outputArray = [];
     makeHtmlSanitizer(tagPolicy)(inputHtml, outputArray);
     return outputArray.join('');
   }
@@ -825,20 +815,20 @@ var html = (function(html4) {
    *     lists of classes.  If not given, such attributes are left unchanged.
    */
   function sanitize(inputHtml, opt_naiveUriRewriter, opt_nmTokenPolicy) {
-    var tagPolicy = makeTagPolicy(opt_naiveUriRewriter, opt_nmTokenPolicy);
+    const tagPolicy = makeTagPolicy(opt_naiveUriRewriter, opt_nmTokenPolicy);
     return sanitizeWithPolicy(inputHtml, tagPolicy);
   }
 
   return {
-    escapeAttrib: escapeAttrib,
-    makeHtmlSanitizer: makeHtmlSanitizer,
-    makeSaxParser: makeSaxParser,
-    makeTagPolicy: makeTagPolicy,
-    normalizeRCData: normalizeRCData,
-    sanitize: sanitize,
-    sanitizeAttribs: sanitizeAttribs,
-    sanitizeWithPolicy: sanitizeWithPolicy,
-    unescapeEntities: unescapeEntities
+    escapeAttrib,
+    makeHtmlSanitizer,
+    makeSaxParser,
+    makeTagPolicy,
+    normalizeRCData,
+    sanitize,
+    sanitizeAttribs,
+    sanitizeWithPolicy,
+    unescapeEntities,
   };
 })(html4);
 
@@ -847,6 +837,6 @@ var html_sanitize = html.sanitize;
 // Exports for closure compiler.  Note this file is also cajoled
 // for domado and run in an environment without 'window'
 if (typeof window !== 'undefined') {
-  window['html'] = html;
-  window['html_sanitize'] = html_sanitize;
+  window.html = html;
+  window.html_sanitize = html_sanitize;
 }
