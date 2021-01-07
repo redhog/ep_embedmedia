@@ -665,7 +665,7 @@ var html = (function (html4) {
       '^' +
       '(?:' +
         '([^:\/?# ]+)' + // scheme
-      ':)?',
+      ':)?'
   );
 
   const ALLOWED_URI_SCHEMES = /^(?:https?|mailto)$/i;
