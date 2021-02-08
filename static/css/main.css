@@ -13,13 +13,13 @@
 
 #cancelEmbedMedia{
   color:red;
-} 
+}
 
 #insertEmbedMedia {
   font-family:font-awesome;
 }
 
 .buttonicon-embed-media:before{
-  content:"\e80b";
+  content:"E";
   top: 2px !important;
 }

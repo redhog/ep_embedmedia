@@ -1,13 +1,18 @@
-exports.aceInitInnerdocbodyHead = function (hook_name, args, cb) {
-  args.iframeHTML.push('<link rel="stylesheet" type="text/css" href="/static/plugins/ep_embedmedia/static/css/ace.css"/>');
-  return cb();
+'use strict';
+
+exports.aceInitInnerdocbodyHead = (hookName, args, cb) => {
+  const url = '/static/plugins/ep_embedmedia/static/css/ace.css';
+  args.iframeHTML.push(`<link rel="stylesheet" type="text/css" href="${url}"/>`);
+  cb();
 };
 
-exports.aceAttribsToClasses = function (hook_name, args, cb) {
-  if (args.key == 'embedMedia' && args.value != '') return cb([`embedMedia:${args.value}`]);
+exports.aceAttribsToClasses = (hookName, args, cb) => {
+  if (args.key === 'embedMedia' && args.value !== '') {
+    cb([`embedMedia:${args.value}`]);
+  }
 };
 
-exports.aceCreateDomLine = function (hook_name, args, cb) {
+exports.aceCreateDomLine = (hookName, args, cb) => {
   if (args.cls.indexOf('embedMedia:') >= 0) {
     const clss = [];
     const argClss = args.cls.split(' ');
@@ -15,37 +20,26 @@ exports.aceCreateDomLine = function (hook_name, args, cb) {
 
     for (let i = 0; i < argClss.length; i++) {
       const cls = argClss[i];
-      if (cls.indexOf('embedMedia:') != -1) {
+      if (cls.indexOf('embedMedia:') !== -1) {
         value = cls.substr(cls.indexOf(':') + 1);
       } else {
         clss.push(cls);
       }
     }
-
-    return cb([{cls: clss.join(' '), extraOpenTags: `<span class='embedMedia'><span class='media'>${exports.cleanEmbedCode(unescape(value))}</span><span class='character'>`, extraCloseTags: '</span>'}]);
+    const cleanedCode = exports.cleanEmbedCode(unescape(value));
+    const media = `<span class='media'>${cleanedCode}</span>`;
+    return cb([{
+      cls: clss.join(' '),
+      extraOpenTags: `<span class='embedMedia'>${media}<span class='character'>`,
+      extraCloseTags: '</span>',
+    }]);
   }
 
   return cb();
 };
 
 
-var wrap = function (obj) {
-  const wrapper = $('<div></div>');
-  wrapper.append(obj);
-  return wrapper;
-};
-
-var filter = function (node) {
-  node = $(node);
-  if (node.children().length) {
-    node.children().each(function () { filter(this); });
-  }
-  if (!node.is('iframe,object,embed,param')) {
-    node.replaceWith(node.children().clone());
-  }
-};
-
-var parseUrlParams = function (url) {
+const parseUrlParams = (url) => {
   const res = {};
   url.split('?')[1].split('&').map((item) => {
     item = item.split('=');
@@ -54,40 +48,44 @@ var parseUrlParams = function (url) {
   return res;
 };
 
-exports.sanitize = function (inputHtml) {
-  // Monkeypatch the sanitizer a bit, adding support for embed tags and fixing broken param tags
-
+exports.sanitize = (inputHtml) => {
+  // Monkeypatch the sanitizer a bit
+  // adding support for embed tags and fixing broken param tags
+  /* global html4, html */
   html4.ELEMENTS.embed = html4.eflags.UNSAFE;
-  html4.ELEMENTS.param = html4.eflags.UNSAFE; // NOT empty or we break stuff in some browsers...
+  html4.ELEMENTS.param = html4.eflags.UNSAFE;
+  // NOT empty or we break stuff in some browsers...
 
   return html.sanitizeWithPolicy(inputHtml, (tagName, attribs) => {
-    if ($.inArray(tagName, ['embed', 'object', 'iframe', 'param']) == -1) {
+    if ($.inArray(tagName, ['embed', 'object', 'iframe', 'param']) === -1) {
       return null;
     }
     return attribs;
   });
 };
 
-exports.cleanEmbedCode = function (orig) {
+exports.cleanEmbedCode = (orig) => {
   let res = null;
 
-  value = $.trim(orig);
+  const value = $.trim(orig);
 
-  if (value.indexOf('http://') == 0 || value.indexOf('https://') == 0) {
-    if (value.indexOf('www.youtube.com') != -1) {
-      var video = escape(parseUrlParams(value).v);
+  if (value.indexOf('http://') === 0 || value.indexOf('https://') === 0) {
+    if (value.indexOf('www.youtube.com') !== -1) {
+      const video = escape(parseUrlParams(value).v);
+      // eslint-disable-next-line max-len
       res = `<iframe width="420" height="315" src="https://www.youtube.com/embed/${video}" frameborder="0" allowfullscreen></iframe>`;
-    } else if (value.indexOf('vimeo.com') != -1) {
-      var video = escape(value.split('/').pop());
+    } else if (value.indexOf('vimeo.com') !== -1) {
+      const video = escape(value.split('/').pop());
+      // eslint-disable-next-line max-len
       res = `<iframe src="http://player.vimeo.com/video/${video}?color=ffffff" width="420" height="236" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>`;
     } else {
       console.warn(`Unsupported embed url: ${orig}`);
     }
-  } else if (value.indexOf('<') == 0) {
-    value = $.trim(exports.sanitize(value));
-    if (value != '') {
-      console.log([orig, value]);
-      res = value;
+  } else if (value.indexOf('<') === 0) {
+    const sanitizedValue = $.trim(exports.sanitize(value));
+    if (sanitizedValue !== '') {
+      console.log([orig, sanitizedValue]);
+      res = sanitizedValue;
     } else {
       console.warn(`Invalid embed code: ${orig}`);
     }
