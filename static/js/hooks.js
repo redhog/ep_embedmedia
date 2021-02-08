@@ -6,9 +6,9 @@ exports.aceInitInnerdocbodyHead = (hookName, args, cb) => {
   cb();
 };
 
-exports.aceAttribsToClasses = (hookName, args, cb) => {
+exports.aceAttribsToClasses = (hookName, args) => {
   if (args.key === 'embedMedia' && args.value !== '') {
-    cb([`embedMedia:${args.value}`]);
+    return [`embedMedia:${args.value}`];
   }
 };
 

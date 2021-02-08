@@ -2,13 +2,13 @@
   position: absolute;
   top: 55px;
   right: 20px;
-  background-color:#fff;
-  margin:20px;
   padding:20px;
 }
 
 .embedMediaButton {
   padding:10px;
+  background: var(--soft-bg-color);
+  color: var(--text-color);
 }
 
 #cancelEmbedMedia{
@@ -20,6 +20,6 @@
 }
 
 .buttonicon-embed-media:before{
-  content:"E";
+  content:"\E83A";
   top: 2px !important;
 }
