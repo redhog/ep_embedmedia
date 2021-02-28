@@ -19,10 +19,10 @@ describe('embed media', function () {
         allowfullscreen></iframe>`);
     chrome$('#doEmbedMedia').click();
     // check content is in pad
-    await helper.waitFor(() => inner$('.media').length !== 0);
+    await helper.waitForPromise(() => inner$('.media').length !== 0);
     // check content is not listed as invalid
-    await helper.waitFor(() => inner$('img').length === 0);
+    await helper.waitForPromise(() => inner$('img').length === 0);
     // check the embed content is visible
-    await helper.waitFor(() => inner$('iframe').length !== 0);
+    await helper.waitForPromise(() => inner$('iframe').length !== 0);
   });
 });
