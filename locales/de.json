@@ -1,6 +1,9 @@
 {
-  "ep_embedmedia.embed" : "Medien einbetten",
-  "ep_embedmedia.code" : "Fügen Sie hier einen Link oder Einbettungscode ein:",
-  "ep_embedmedia.insert" : "Medien einfügen",
-  "ep_embedmedia.cancel" : "Abbrechen"
+	"@metadata": {
+		"authors": []
+	},
+	"ep_embedmedia.embed": "Medien einbetten",
+	"ep_embedmedia.code": "Fügen Sie hier einen Link oder Einbettungscode ein:",
+	"ep_embedmedia.insert": "Medien einfügen",
+	"ep_embedmedia.cancel": "Abbrechen"
 }
